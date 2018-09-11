@@ -17,12 +17,10 @@ type helloServer struct {
 }
 
 func (hs *helloServer) Start() {
-	go func() {
-		if err := hs.server.ListenAndServe(); err != nil {
-			panic(err)
-		}
-		defer hs.server.Close()
-	}()
+	if err := hs.server.ListenAndServe(); err != nil {
+		panic(err)
+	}
+	defer hs.server.Close()
 }
 
 func (hs *helloServer) handleHello(writer http.ResponseWriter, request *http.Request) {
