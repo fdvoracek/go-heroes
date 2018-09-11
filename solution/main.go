@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/CoufalJa/go-workshop/pkg/server"
 	"os"
@@ -8,9 +9,17 @@ import (
 	"syscall"
 )
 
+var name string
+
+func init() {
+	flag.StringVar(&name, "name", "Stranger", "a name variable")
+}
+
 func main() {
+	flag.Parse()
+
 	fmt.Println("Starting server ...")
-	helloServer := server.NewHelloServer()
+	helloServer := server.NewHelloServer(name)
 	go helloServer.Start()
 	fmt.Println("Server started")
 

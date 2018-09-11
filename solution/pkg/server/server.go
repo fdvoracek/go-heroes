@@ -1,7 +1,9 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/CoufalJa/go-workshop/pkg/model"
 	"net/http"
 )
 
@@ -10,6 +12,7 @@ type HelloServer interface {
 }
 
 type helloServer struct {
+	name   string
 	server http.Server
 }
 
@@ -23,21 +26,21 @@ func (hs *helloServer) Start() {
 }
 
 func (hs *helloServer) handleHello(writer http.ResponseWriter, request *http.Request) {
-	fmt.Fprint(writer, "Hello Stranger")
+	bytes, err := json.Marshal(model.Saying{Name: hs.name})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Fprint(writer, string(bytes))
 }
 
-func (hs *helloServer) handleGoodbye(writer http.ResponseWriter, request *http.Request) {
-	fmt.Fprint(writer, "Goodbye Stranger")
-}
-
-func NewHelloServer() HelloServer {
+func NewHelloServer(name string) HelloServer {
 	hello := &helloServer{
+		name:   name,
 		server: http.Server{Addr: ":8080"},
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hello", hello.handleHello)
-	mux.HandleFunc("/goodbye", hello.handleGoodbye)
 	hello.server.Handler = mux
 
 	return hello
