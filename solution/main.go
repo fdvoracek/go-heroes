@@ -9,14 +9,11 @@ import (
 	"syscall"
 )
 
-var name string
-
-
 func main() {
 	flag.Parse()
 
 	fmt.Println("Starting server ...")
-	helloServer := server.NewHelloServer(name)
+	helloServer := server.NewHelloServer()
 	go helloServer.Start()
 	fmt.Println("Server started")
 

@@ -2,10 +2,6 @@ package model
 
 import "time"
 
-type Saying struct {
-	Name string `json:"name"`
-}
-
 type Request struct {
 	Domain string `json:"domain"`
 }
