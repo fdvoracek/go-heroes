@@ -11,9 +11,6 @@ import (
 
 var name string
 
-func init() {
-	flag.StringVar(&name, "name", "Stranger", "a name variable")
-}
 
 func main() {
 	flag.Parse()

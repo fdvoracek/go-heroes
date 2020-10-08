@@ -1,10 +1,13 @@
 package server
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"github.com/CoufalJa/go-workshop/pkg/db"
 	"github.com/CoufalJa/go-workshop/pkg/model"
 	"net/http"
+	"time"
 )
 
 type HelloServer interface {
@@ -23,12 +26,45 @@ func (hs *helloServer) Start() {
 	defer hs.server.Close()
 }
 
-func (hs *helloServer) handleHello(writer http.ResponseWriter, request *http.Request) {
-	bytes, err := json.Marshal(model.Saying{Name: hs.name})
+func hashToSha256(data string) []byte {
+
+	hash := sha256.New()
+	hash.Write([]byte(data))
+
+	return hash.Sum(nil);
+}
+
+func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Request) {
+
+	var filterRequest model.Request
+	json.NewDecoder(request.Body).Decode(&filterRequest)
+
+	hashedDomain := hashToSha256(filterRequest.Domain)
+
+	var requestTimeout = 150 * time.Millisecond
+	//var requestTimeout = 10 * time.Second
+	mc := db.NewMemcacheClient("127.0.0.1:11211", requestTimeout)
+
+	chain := make(chan model.SecurityDefinition)
+
+	var expectedArrayLength = 3
+	for i := 0; i< expectedArrayLength; i++ {
+		go mc.Get(hashedDomain, filterRequest.Domain, chain)
+	}
+
+	responses := make([]model.SecurityDefinition, expectedArrayLength)
+
+	for i, _ := range responses {
+		responses[i] = <-chain
+	}
+
+	//fmt.Fprintf(writer, string(len(responses)))
+
+	bytes, err := json.Marshal(responses)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Fprint(writer, string(bytes))
+	fmt.Fprintf(writer, string(bytes))
 }
 
 func NewHelloServer(name string) HelloServer {
@@ -38,7 +74,8 @@ func NewHelloServer(name string) HelloServer {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/hello", hello.handleHello)
+
+	mux.HandleFunc("/performancetest/security-domain", hello.handleFilter)
 	hello.server.Handler = mux
 
 	return hello
