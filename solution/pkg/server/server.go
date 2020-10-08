@@ -15,7 +15,6 @@ type HelloServer interface {
 }
 
 type helloServer struct {
-	name   string
 	server http.Server
 	memcacheClient db.MemcacheClient
 }
@@ -64,12 +63,11 @@ func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Re
 	fmt.Fprintf(writer, string(bytes))
 }
 
-func NewHelloServer(name string) HelloServer {
-	var requestTimeout = 150 * time.Millisecond
-	//var requestTimeout = 10 * time.Second
+func NewHelloServer() HelloServer {
+	//var requestTimeout = 150 * time.Millisecond
+	var requestTimeout = 10 * time.Second
 
 	hello := &helloServer{
-		name:   name,
 		server: http.Server{Addr: ":8080"},
 		memcacheClient: db.NewMemcacheClient("127.0.0.1:11211", requestTimeout),
 	}
