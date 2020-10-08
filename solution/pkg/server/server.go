@@ -17,6 +17,7 @@ type HelloServer interface {
 type helloServer struct {
 	name   string
 	server http.Server
+	memcacheClient db.MemcacheClient
 }
 
 func (hs *helloServer) Start() {
@@ -31,7 +32,7 @@ func hashToSha256(data string) []byte {
 	hash := sha256.New()
 	hash.Write([]byte(data))
 
-	return hash.Sum(nil);
+	return hash.Sum(nil)
 }
 
 func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Request) {
@@ -41,15 +42,11 @@ func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Re
 
 	hashedDomain := hashToSha256(filterRequest.Domain)
 
-	var requestTimeout = 150 * time.Millisecond
-	//var requestTimeout = 10 * time.Second
-	mc := db.NewMemcacheClient("127.0.0.1:11211", requestTimeout)
-
 	chain := make(chan model.SecurityDefinition)
 
 	var expectedArrayLength = 3
 	for i := 0; i< expectedArrayLength; i++ {
-		go mc.Get(hashedDomain, filterRequest.Domain, chain)
+		go hs.memcacheClient.Get(hashedDomain, filterRequest.Domain, chain)
 	}
 
 	responses := make([]model.SecurityDefinition, expectedArrayLength)
@@ -68,9 +65,13 @@ func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Re
 }
 
 func NewHelloServer(name string) HelloServer {
+	var requestTimeout = 150 * time.Millisecond
+	//var requestTimeout = 10 * time.Second
+
 	hello := &helloServer{
 		name:   name,
 		server: http.Server{Addr: ":8080"},
+		memcacheClient: db.NewMemcacheClient("127.0.0.1:11211", requestTimeout),
 	}
 
 	mux := http.NewServeMux()

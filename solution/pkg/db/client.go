@@ -18,7 +18,7 @@ type memcacheClient struct {
 }
 
 func (m *memcacheClient) Get(hashedResource []byte, resource string, resultChain chan model.SecurityDefinition) {
-	domainKey := fmt.Sprintf(	"@@%s.%x", "DOMAIN", string(hashedResource))
+	domainKey := fmt.Sprintf(	"@@%s.%x", "DOMAIN_ETL", string(hashedResource))
 	//fmt.Printf("About to lookup payload under key %s\n", domainKey)
 
 	item, err := m.client.Get(domainKey)
@@ -49,7 +49,7 @@ func NewMemcacheClient(server string, requestTimeout time.Duration) MemcacheClie
 	fmt.Println("Connected to memcache")
 
 	mc.SetTimeout(requestTimeout)
-	fmt.Println("Request timeout set to ", requestTimeout)
+	fmt.Println("Request timeout set to", requestTimeout)
 
 	clientInstance := &memcacheClient{
 		client: mc,
