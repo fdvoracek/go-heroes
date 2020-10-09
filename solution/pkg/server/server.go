@@ -8,7 +8,6 @@ import (
 	"github.com/fdvoracek/go-heroes/solution/pkg/model"
 	"net/http"
 	"net/http/pprof"
-	_ "net/http/pprof"
 	"sync"
 	"time"
 )
