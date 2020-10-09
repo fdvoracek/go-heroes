@@ -7,14 +7,14 @@ type Request struct {
 }
 
 type SecurityDefinition struct {
-	Id string `json:"id"`
+	Id string                `json:"id"`
 	ImportRunTimeUtcMs int64 `json:"importRunTimeUtcMs"`
-	CreatedTimeUtcMs int64 `json:"createdTimeUtcMs"`
-	Resources []Resources `json:"resources"`
+	CreatedTimeUtcMs int64   `json:"createdTimeUtcMs"`
+	Resources []Resources    `json:"resources"`
 }
 
 type Resources struct {
-	Resource string `json:"resource"`
+	Resource string   `json:"resource"`
 	Sources []Sources `json:"sources"`
 }
 

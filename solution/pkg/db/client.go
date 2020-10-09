@@ -1,10 +1,10 @@
 package db
 
 import (
-	"encoding/json"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
-	"github.com/CoufalJa/go-workshop/pkg/model"
+	"github.com/fdvoracek/go-heroes/solution/pkg/model"
 	"github.com/rainycape/memcache"
 	"time"
 )

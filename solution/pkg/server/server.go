@@ -4,8 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"github.com/CoufalJa/go-workshop/pkg/db"
-	"github.com/CoufalJa/go-workshop/pkg/model"
+	"github.com/fdvoracek/go-heroes/solution/pkg/db"
+	"github.com/fdvoracek/go-heroes/solution/pkg/model"
 	"net/http"
 	"time"
 )
@@ -15,7 +15,7 @@ type HelloServer interface {
 }
 
 type helloServer struct {
-	server http.Server
+	server         http.Server
 	memcacheClient db.MemcacheClient
 }
 
@@ -68,7 +68,7 @@ func NewHelloServer() HelloServer {
 	var requestTimeout = 10 * time.Second
 
 	hello := &helloServer{
-		server: http.Server{Addr: ":8080"},
+		server:         http.Server{Addr: ":8080"},
 		memcacheClient: db.NewMemcacheClient("127.0.0.1:11211", requestTimeout),
 	}
 
