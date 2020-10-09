@@ -11,6 +11,7 @@ import (
 
 type MemcacheClient interface {
 	Get(hashedResource []byte, resource string) model.SecurityDefinition
+	GetWithChan(hashedResource []byte, resource string, channel chan model.SecurityDefinition)
 }
 
 type memcacheClient struct {
@@ -23,7 +24,7 @@ func (m *memcacheClient) Get(hashedResource []byte, resource string) model.Secur
 
 	item, err := m.client.Get(domainKey)
 	if err != nil {
-		//fmt.Printf("Error occurred while getting key %s due to:\n'%s'\n", domainKey, err)
+		fmt.Printf("Error occurred while getting key %s due to:\n'%s'\n", domainKey, err)
 	}
 
 	var securityDefinition model.SecurityDefinition
@@ -41,6 +42,30 @@ func (m *memcacheClient) Get(hashedResource []byte, resource string) model.Secur
 	return securityDefinition
 }
 
+func (m *memcacheClient) GetWithChan(hashedResource []byte, resource string, channel chan model.SecurityDefinition)  {
+	domainKey := fmt.Sprintf(	"@@%s.%x", "DOMAIN_ETL", string(hashedResource))
+	//fmt.Printf("About to lookup payload under key %s\n", domainKey)
+
+	item, err := m.client.Get(domainKey)
+	if err != nil {
+		fmt.Printf("Error occurred while getting key %s due to:\n'%s'\n", domainKey, err)
+	}
+
+	var securityDefinition model.SecurityDefinition
+	if (item != nil) && (len(item.Value) > 0) {
+		err := json.Unmarshal(item.Value, &securityDefinition)
+		if err != nil {
+			panic(err)
+		}
+		//fmt.Printf("Found %+v\n", securityDefinition)
+	} else {
+		securityDefinition = model.NewSecurityDefinition(hex.EncodeToString(hashedResource), resource)
+		//fmt.Printf("Returning default (CLEAN) result %+v\n", securityDefinition)
+	}
+
+	channel <- securityDefinition
+}
+
 func NewMemcacheClient(server string, requestTimeout time.Duration) MemcacheClient {
 	mc, err := memcache.New(server)
 	if err != nil {
@@ -49,6 +74,7 @@ func NewMemcacheClient(server string, requestTimeout time.Duration) MemcacheClie
 	fmt.Println("Connected to memcache")
 
 	mc.SetTimeout(requestTimeout)
+	mc.SetMaxIdleConnsPerAddr(10000)
 	fmt.Println("Request timeout set to", requestTimeout)
 
 	clientInstance := &memcacheClient{

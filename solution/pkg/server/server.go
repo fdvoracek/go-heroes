@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"github.com/fdvoracek/go-heroes/solution/pkg/db"
 	"github.com/fdvoracek/go-heroes/solution/pkg/model"
 	"net/http"
@@ -35,32 +36,32 @@ func hashToSha256(data string) []byte {
 	return hash.Sum(nil)
 }
 
-//func (hs *helloServer) handleFilterWithChain(writer http.ResponseWriter, request *http.Request) {
-//
-//	var filterRequest model.Request
-//	json.NewDecoder(request.Body).Decode(&filterRequest)
-//
-//	hashedDomain := hashToSha256(filterRequest.Domain)
-//
-//	chain := make(chan model.SecurityDefinition)
-//
-//	var expectedArrayLength = 3
-//	for i := 0; i< expectedArrayLength; i++ {
-//		go hs.memcacheClient.Get(hashedDomain, filterRequest.Domain)
-//	}
-//
-//	responses := make([]model.SecurityDefinition, expectedArrayLength)
-//
-//	for i, _ := range responses {
-//		responses[i] = <-chain
-//	}
-//
-//	bytes, err := json.Marshal(responses)
-//	if err != nil {
-//		panic(err)
-//	}
-//	fmt.Fprintf(writer, string(bytes))
-//}
+func (hs *helloServer) handleFilterWithChan(writer http.ResponseWriter, request *http.Request) {
+
+	var filterRequest model.Request
+	json.NewDecoder(request.Body).Decode(&filterRequest)
+
+	hashedDomain := hashToSha256(filterRequest.Domain)
+
+	channel := make(chan model.SecurityDefinition)
+
+	var expectedArrayLength = 3
+	for i := 0; i< expectedArrayLength; i++ {
+		go hs.memcacheClient.GetWithChan(hashedDomain, filterRequest.Domain, channel)
+	}
+
+	responses := make([]model.SecurityDefinition, expectedArrayLength)
+
+	for i, _ := range responses {
+		responses[i] = <- channel
+	}
+
+	bytes, err := json.Marshal(responses)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Fprintf(writer, string(bytes))
+}
 
 func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Request) {
 	var filterRequest model.Request
@@ -82,7 +83,7 @@ func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Re
 	for i, _ := range responses {
 		responses[i] = <-chain
 	}
-	
+
 	err := json.NewEncoder(writer).Encode(responses)
 	if err != nil {
 		panic(err)
@@ -101,6 +102,7 @@ func NewHelloServer() HelloServer {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/performancetest/security-domain", hello.handleFilter)
+	mux.HandleFunc("/performancetest/security-domain-chan", hello.handleFilterWithChan)
 	// Register pprof handlers
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
