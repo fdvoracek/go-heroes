@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/fdvoracek/go-heroes/pkg/model"
+	"github.com/fdvoracek/go-heroes/solution/pkg/model"
 	"github.com/rainycape/memcache"
 	"time"
 )
