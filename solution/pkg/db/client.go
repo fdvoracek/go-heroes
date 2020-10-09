@@ -10,20 +10,20 @@ import (
 )
 
 type MemcacheClient interface {
-	Get(hashedResource []byte, resource string, resultChain chan model.SecurityDefinition)
+	Get(hashedResource []byte, resource string) model.SecurityDefinition
 }
 
 type memcacheClient struct {
 	client *memcache.Client
 }
 
-func (m *memcacheClient) Get(hashedResource []byte, resource string, resultChain chan model.SecurityDefinition) {
+func (m *memcacheClient) Get(hashedResource []byte, resource string) model.SecurityDefinition {
 	domainKey := fmt.Sprintf(	"@@%s.%x", "DOMAIN_ETL", string(hashedResource))
 	//fmt.Printf("About to lookup payload under key %s\n", domainKey)
 
 	item, err := m.client.Get(domainKey)
 	if err != nil {
-		fmt.Printf("Error occurred while getting key %s due to:\n'%s'\n", domainKey, err)
+		//fmt.Printf("Error occurred while getting key %s due to:\n'%s'\n", domainKey, err)
 	}
 
 	var securityDefinition model.SecurityDefinition
@@ -38,7 +38,7 @@ func (m *memcacheClient) Get(hashedResource []byte, resource string, resultChain
 		//fmt.Printf("Returning default (CLEAN) result %+v\n", securityDefinition)
 	}
 
-	resultChain <- securityDefinition
+	return securityDefinition
 }
 
 func NewMemcacheClient(server string, requestTimeout time.Duration) MemcacheClient {

@@ -8,7 +8,7 @@ import (
 	"github.com/fdvoracek/go-heroes/solution/pkg/model"
 	"net/http"
 	"net/http/pprof"
-	_ "net/http/pprof"
+	"sync"
 	"time"
 )
 
@@ -36,7 +36,7 @@ func hashToSha256(data string) []byte {
 	return hash.Sum(nil)
 }
 
-func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Request) {
+func (hs *helloServer) handleFilterWithChain(writer http.ResponseWriter, request *http.Request) {
 
 	var filterRequest model.Request
 	json.NewDecoder(request.Body).Decode(&filterRequest)
@@ -47,7 +47,7 @@ func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Re
 
 	var expectedArrayLength = 3
 	for i := 0; i< expectedArrayLength; i++ {
-		go hs.memcacheClient.Get(hashedDomain, filterRequest.Domain, chain)
+		go hs.memcacheClient.Get(hashedDomain, filterRequest.Domain)
 	}
 
 	responses := make([]model.SecurityDefinition, expectedArrayLength)
@@ -56,13 +56,38 @@ func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Re
 		responses[i] = <-chain
 	}
 
-	//fmt.Fprintf(writer, string(len(responses)))
-
 	bytes, err := json.Marshal(responses)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Fprintf(writer, string(bytes))
+}
+
+func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Request) {
+	var filterRequest model.Request
+	json.NewDecoder(request.Body).Decode(&filterRequest)
+	hashedDomain := hashToSha256(filterRequest.Domain)
+	const expectedArrayLength = 3
+	chain := make(chan model.SecurityDefinition, expectedArrayLength)
+	defer close(chain)
+	var wg sync.WaitGroup
+	for i := 0; i< expectedArrayLength; i++ {
+		wg.Add(1)
+		go func() {
+			chain <- hs.memcacheClient.Get(hashedDomain, filterRequest.Domain)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	responses := [expectedArrayLength]model.SecurityDefinition{}
+	for i, _ := range responses {
+		responses[i] = <-chain
+	}
+	
+	err := json.NewEncoder(writer).Encode(responses)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func NewHelloServer() HelloServer {
