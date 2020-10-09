@@ -1,4 +1,4 @@
-module github.com/CoufalJa/go-workshop
+module github.com/fdvoracek/go-heroes
 
 go 1.15
 
