@@ -49,6 +49,7 @@ func NewMemcacheClient(server string, requestTimeout time.Duration) MemcacheClie
 	fmt.Println("Connected to memcache")
 
 	mc.SetTimeout(requestTimeout)
+	mc.SetMaxIdleConnsPerAddr(10000)
 	fmt.Println("Request timeout set to", requestTimeout)
 
 	clientInstance := &memcacheClient{
