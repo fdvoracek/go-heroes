@@ -3,10 +3,12 @@ package server
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"github.com/fdvoracek/go-heroes/solution/pkg/db"
 	"github.com/fdvoracek/go-heroes/solution/pkg/model"
 	"net/http"
 	"net/http/pprof"
+	_ "net/http/pprof"
 	"sync"
 	"time"
 )
@@ -82,7 +84,7 @@ func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Re
 	for i, _ := range responses {
 		responses[i] = <-chain
 	}
-	
+
 	err := json.NewEncoder(writer).Encode(responses)
 	if err != nil {
 		panic(err)
