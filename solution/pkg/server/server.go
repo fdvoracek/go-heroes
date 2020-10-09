@@ -7,7 +7,7 @@ import (
 	"github.com/fdvoracek/go-heroes/solution/pkg/db"
 	"github.com/fdvoracek/go-heroes/solution/pkg/model"
 	"net/http"
-	_ "net/http/pprof"
+	"net/http/pprof"
 	"sync"
 	"time"
 )
@@ -101,7 +101,8 @@ func NewHelloServer() HelloServer {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/performancetest/security-domain", hello.handleFilter)
+	mux.HandleFunc("/performancetest/security-domain", hello.handleFilterWithChain)
+	mux.HandleFunc("/performancetest/security-domain-unbounded", hello.handleFilter)
 	// Register pprof handlers
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
