@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/CoufalJa/go-workshop/pkg/server"
+	"github.com/fdvoracek/go-heroes/solution/pkg/server"
 	"os"
 	"os/signal"
 	"syscall"

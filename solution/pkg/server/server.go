@@ -4,9 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"github.com/CoufalJa/go-workshop/pkg/db"
-	"github.com/CoufalJa/go-workshop/pkg/model"
+	"github.com/fdvoracek/go-heroes/solution/pkg/db"
+	"github.com/fdvoracek/go-heroes/solution/pkg/model"
 	"net/http"
+	"net/http/pprof"
+	_ "net/http/pprof"
 	"time"
 )
 
@@ -15,7 +17,7 @@ type HelloServer interface {
 }
 
 type helloServer struct {
-	server http.Server
+	server         http.Server
 	memcacheClient db.MemcacheClient
 }
 
@@ -68,13 +70,19 @@ func NewHelloServer() HelloServer {
 	var requestTimeout = 10 * time.Second
 
 	hello := &helloServer{
-		server: http.Server{Addr: ":8080"},
+		server:         http.Server{Addr: ":8080"},
 		memcacheClient: db.NewMemcacheClient("127.0.0.1:11211", requestTimeout),
 	}
 
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/performancetest/security-domain", hello.handleFilter)
+	// Register pprof handlers
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	hello.server.Handler = mux
 
 	return hello
