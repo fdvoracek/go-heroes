@@ -66,7 +66,7 @@ func (m *memcacheClient) GetWithChan(hashedResource []byte, resource string, cha
 	channel <- securityDefinition
 }
 
-func NewMemcacheClient(server string, requestTimeout time.Duration) MemcacheClient {
+func NewMemcacheClient(server string, requestTimeout time.Duration, maxIdle int) MemcacheClient {
 	mc, err := memcache.New(server)
 	if err != nil {
 		panic(err)
@@ -74,8 +74,9 @@ func NewMemcacheClient(server string, requestTimeout time.Duration) MemcacheClie
 	fmt.Println("Connected to memcache")
 
 	mc.SetTimeout(requestTimeout)
-	mc.SetMaxIdleConnsPerAddr(10000)
+	mc.SetMaxIdleConnsPerAddr(maxIdle)
 	fmt.Println("Request timeout set to", requestTimeout)
+	fmt.Println("Max idle set to", maxIdle)
 
 	clientInstance := &memcacheClient{
 		client: mc,

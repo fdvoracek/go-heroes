@@ -7,7 +7,6 @@ import (
 	"github.com/fdvoracek/go-heroes/pkg/db"
 	"github.com/fdvoracek/go-heroes/pkg/model"
 	"net/http"
-	"net/http/pprof"
 	"sync"
 	"time"
 )
@@ -93,22 +92,17 @@ func (hs *helloServer) handleFilter(writer http.ResponseWriter, request *http.Re
 func NewHelloServer() HelloServer {
 	//var requestTimeout = 150 * time.Millisecond
 	var requestTimeout = 10 * time.Second
+	var maxIdle = 100
 
 	hello := &helloServer{
 		server:         http.Server{Addr: ":8080"},
-		memcacheClient: db.NewMemcacheClient("127.0.0.1:11211", requestTimeout),
+		memcacheClient: db.NewMemcacheClient("127.0.0.1:11211", requestTimeout, maxIdle),
 	}
 
 	mux := http.NewServeMux()
+	fmt.Println("handleFilterWithChan ...")
 
-	mux.HandleFunc("/performancetest/security-domain", hello.handleFilter)
-	mux.HandleFunc("/performancetest/security-domain-chan", hello.handleFilterWithChan)
-	// Register pprof handlers
-	mux.HandleFunc("/debug/pprof/", pprof.Index)
-	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	mux.HandleFunc("/performancetest/security-domain", hello.handleFilterWithChan)
 	hello.server.Handler = mux
 
 	return hello
